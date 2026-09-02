@@ -2,30 +2,6 @@
 function sortByLength(array) {
     return array.sort((x, y) => y.length - x.length);
 }
-function longest(arr) {
-    let lgth = 0;
-    let longest;
-    for (let i = 0; i < arr.length; i++) {
-        if (arr[i].length > lgth) {
-            lgth = arr[i].length;
-            longest = arr[i];
-        }
-    }
-    return longest;
-}
-function purge(arr, purge) {
-    purgedArr = [];
-    for (let i = 0; i < arr.length; i++) {
-        const elem = arr[i];
-        if (!elem.startsWith(purge)) {
-            purgedArr.push(elem);
-        }
-    }
-    return purgedArr;
-}
-String.prototype.isIn = (str) => {
-    return findSuffix(this, str) == this;
-}
 function transpose(matrix) {
     let [row] = matrix
     return row.map((value, column) => matrix.map(row => row[column]))
@@ -57,7 +33,16 @@ function getFeatureList(input) {
                 .split(',')
                 .map(s => s.trim())
                 .filter(s => s.length > 0);
-            features.push({ name, types });
+            if (types.some(item => item.startsWith("*"))) { //if there's smth like *cons
+                astIndex = types.findIndex(item => item.includes("*"));
+                types[astIndex] = types[astIndex].slice(1);
+                const asterisk = types[astIndex];
+                features.push({ name, types, asterisk });
+
+            }
+            else {
+                features.push({ name, types });
+            }
         }
     }
 
@@ -65,7 +50,7 @@ function getFeatureList(input) {
 }
 
 function getSymbolsList(input) {
-    const features = getFeatureList(input);
+    const featuresList = getFeatureList(input);
     let symbols = [];
     for (let i = 0; i < input.length; i++) {
         const line = input[i];
@@ -80,7 +65,7 @@ function getSymbolsList(input) {
             const features = featuresString
                 .split(/\s+/)
                 .filter(s => s.length > 0);
-            symbols.push({name,features});
+            symbols.push({ name, features });
         };
     }
 
@@ -88,11 +73,30 @@ function getSymbolsList(input) {
 
     for (let i = 0; i < symbols.length; i++) {
         const symbol = symbols[i];
-        const matrix = {name: symbol.name};
-        
+        const matrix = { name: symbol.name, features: {} };
+
+        for (let j = 0; j < symbol.features.length; j++) { //all features in a symbol
+            const feature = symbol.features[j];
+            for (let k = 0; k < featuresList.length; k++) { //all the features
+                const set2 = new Array(featuresList[k]);
+                const hasOverlap = symbol.features.some(element => { featuresList[k].includes(element) })
+                if (!hasOverlap) { //feature not on symbol
+                    if(featuresList[k].asterisk){
+                        matrix.features[featuresList[k].name] = featuresList[k].asterisk; // get the one with the *
+                    }
+                    else {
+                        matrix.features[featuresList[k].name] = ""; // put in nothing
+                    }
+                }
+                if (featuresList[k].types.includes(feature)) {
+                    matrix.features[featuresList[k].name] = feature;
+                }
+            }
+        }
+        symbolsMatrix.push(matrix);
     }
 
-    return symbols;
+    return symbolsMatrix;
 }
 
 //THE OUTPUT

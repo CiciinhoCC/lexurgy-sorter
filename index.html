@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lexurgy Sorter</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="inputoutput">
+        <div>
+            <h1>Input</h1>
+            <textarea name="input" id="input" placeholder="Lexurgy goes here"></textarea>
+        </div>
+        <div>
+            <h1>Output</h1>
+            <textarea name="output" id="output" placeholder="Hopefully it gets sorted here" readonly></textarea>
+        </div>
+    </div>
+    <div class="colnumbers">
+        <button type="button" onclick="doTheThing()">Do the thing</button>
+    </div>
+
+
+    <script src="main.js"></script>
+    <script>
+        function doTheThing() {
+            let input = document.getElementById("input").value;
+            let output = "";
+            output = output(input);
+            document.getElementById("output").innerHTML = output;
+        }
+    </script>
+</body>
+
+</html>

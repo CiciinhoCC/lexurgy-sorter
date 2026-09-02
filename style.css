@@ -1,0 +1,40 @@
+body {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    color: #e8e6e3;
+    background-color: #181a1b;
+
+    div {
+        margin: 5px;
+    }
+    textarea, input, button {
+        background-color: #2b2a33;
+        color: #e8e6e3;
+    }
+
+    .inputoutput {
+        height: 100vh;
+        display: flex;
+        flex-direction: row;
+
+        div {
+            height: 100vh;
+            textarea {
+                height: 80vh;
+                width: 30vw;
+            }
+        }
+    }
+
+    .colnumbers {
+        display: flex;
+        flex-direction: column;
+        text-indent: 10px;
+        text-align: justify;
+
+        overflow-y: scroll;
+    }
+}

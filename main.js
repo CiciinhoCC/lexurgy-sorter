@@ -49,26 +49,55 @@ function getFeatureList(input) {
 
         if (line.includes("Feature")) {
             const match = line.trim().match(/^Feature\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)$/);
-
             if (!match) {
-                throw new Error('Invalid format: Expected "Feature name(type1, type2, ...)"');
+                throw new Error("Error at: '" + line + "'");
             }
-
             const [, name, typesString] = match;
-
             const types = typesString
                 .split(',')
                 .map(s => s.trim())
                 .filter(s => s.length > 0);
-
-            features.push({name,types});
+            features.push({ name, types });
         }
     }
+
+    return features;
+}
+
+function getSymbolsList(input) {
+    const features = getFeatureList(input);
+    let symbols = [];
+    for (let i = 0; i < input.length; i++) {
+        const line = input[i];
+
+        if (line.includes("Symbol")) {
+            const match = line.match(/^Symbol\s+([^\s]+)\s+\[([^\]]*)\]$/);
+            if (!match) {
+                throw new Error("Error at: '" + line + "'");
+            }
+            const [, name, featuresString] = match;
+
+            const features = featuresString
+                .split(/\s+/)
+                .filter(s => s.length > 0);
+            symbols.push({name,features});
+        };
+    }
+
+    let symbolsMatrix = [];
+
+    for (let i = 0; i < symbols.length; i++) {
+        const symbol = symbols[i];
+        const matrix = {name: symbol.name};
+        
+    }
+
+    return symbols;
 }
 
 //THE OUTPUT
 
-function output(input) {
+function result(input) {
     const inputList = input.split("\n");
     if (input.includes(":") && !input.includes("\:")) {
         return "Put in just the definitions, not the sound changes";
@@ -81,6 +110,7 @@ function output(input) {
     }
 
     console.log(getFeatureList(inputList));
+    console.log(getSymbolsList(inputList))
 
     return ":P";
 

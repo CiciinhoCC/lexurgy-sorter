@@ -76,27 +76,48 @@ function getSymbolsList(input) {
         const matrix = { name: symbol.name, features: {} };
 
         for (let j = 0; j < symbol.features.length; j++) { //all features in a symbol
-            const feature = symbol.features[j];
+            const symbolFeature = symbol.features[j];
             for (let k = 0; k < featuresList.length; k++) { //all the features
-                const set2 = new Array(featuresList[k]);
-                const hasOverlap = symbol.features.some(element => { featuresList[k].includes(element) })
+                const typeFeature = featuresList[k];
+                const set2 = new Array(typeFeature);
+                const hasOverlap = symbol.features.some(element => typeFeature.types.includes(element))
                 if (!hasOverlap) { //feature not on symbol
-                    if(featuresList[k].asterisk){
-                        matrix.features[featuresList[k].name] = featuresList[k].asterisk; // get the one with the *
+                    if(typeFeature.asterisk){
+                        matrix.features[typeFeature.name] = typeFeature.asterisk; // get the one with the *
                     }
                     else {
-                        matrix.features[featuresList[k].name] = ""; // put in nothing
+                        matrix.features[typeFeature.name] = ""; // put in nothing
                     }
                 }
-                if (featuresList[k].types.includes(feature)) {
-                    matrix.features[featuresList[k].name] = feature;
+                if (typeFeature.types.includes(symbolFeature)) {
+                    matrix.features[typeFeature.name] = symbolFeature;
                 }
             }
         }
         symbolsMatrix.push(matrix);
     }
 
-    return symbolsMatrix;
+    return [featuresList, symbolsMatrix];
+}
+
+function sortSymbols(input) {
+    const [featuresList, symbolsMatrix] = getSymbolsList(input);
+    const sortedSymbols = symbolsMatrix;
+
+    //weighted values of matrix
+    const weightedFeatures = featuresList;
+    const largestFeatureLength = featuresList.sort((a,b) => {return b.types.length - a.types.length})[0].length;
+
+
+
+
+    sortedSymbols.sort((a,b) => {
+
+
+
+
+    })
+
 }
 
 //THE OUTPUT
@@ -114,7 +135,7 @@ function result(input) {
     }
 
     console.log(getFeatureList(inputList));
-    console.log(getSymbolsList(inputList))
+    console.log(getSymbolsList(inputList));
 
     return ":P";
 

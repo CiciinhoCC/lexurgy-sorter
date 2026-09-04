@@ -20,6 +20,7 @@ function transpose(matrix) {
 function getFeatureList(input) {
     let features = [];
 
+    //get the features
     for (let i = 0; i < input.length; i++) {
         const line = input[i];
 
@@ -46,7 +47,27 @@ function getFeatureList(input) {
         }
     }
 
-    return features;
+
+    //weigh them
+    const weightedFeatures = features;
+    let largestFeatureLength = 10;
+    console.log(largestFeatureLength);
+    for (let i = 1; i < features.length; i++) {
+        if (features[i].types.length > largestFeatureLength) {
+            largestFeatureLength = features[i].types.length;
+        }
+    }
+    for (let i = 0; i < weightedFeatures.length; i++) {
+        const feature = weightedFeatures[i];
+        feature.weight = largestFeatureLength ** (weightedFeatures.length - i - 1);
+        feature.typeWeights = [];
+        for (let j = 0; j < feature.types.length; j++) {
+            const type = feature.types[j];
+            feature.typeWeights[j] = (largestFeatureLength - j - 1) * feature.weight;
+        }
+    }
+
+    return weightedFeatures;
 }
 
 function getSymbolsList(input) {
@@ -82,7 +103,7 @@ function getSymbolsList(input) {
                 const set2 = new Array(typeFeature);
                 const hasOverlap = symbol.features.some(element => typeFeature.types.includes(element))
                 if (!hasOverlap) { //feature not on symbol
-                    if(typeFeature.asterisk){
+                    if (typeFeature.asterisk) {
                         matrix.features[typeFeature.name] = typeFeature.asterisk; // get the one with the *
                     }
                     else {
@@ -97,27 +118,69 @@ function getSymbolsList(input) {
         symbolsMatrix.push(matrix);
     }
 
-    return [featuresList, symbolsMatrix];
+    return symbolsMatrix;
 }
 
 function sortSymbols(input) {
-    const [featuresList, symbolsMatrix] = getSymbolsList(input);
-    const sortedSymbols = symbolsMatrix;
+    const symbolsMatrix = getSymbolsList(input);
+    const featuresList = getFeatureList(input);
 
-    //weighted values of matrix
-    const weightedFeatures = featuresList;
-    const largestFeatureLength = featuresList.sort((a,b) => {return b.types.length - a.types.length})[0].length;
+    //put all the weights in a list cus it's easier
+    const weightList = {};
 
+    for (let i = 0; i < featuresList.length; i++) {
+        const feature = featuresList[i];
+        for (let j = 0; j < feature.types.length; j++) {
+            weightList[feature.types[j]] = feature.typeWeights[j]
+        }
+    }
 
+    console.log(weightList)
 
+    // weigh all the symbols
 
-    sortedSymbols.sort((a,b) => {
+    for (let i = 0; i < symbolsMatrix.length; i++) {
+        const symbol = symbolsMatrix[i];
+        let weight = 0;
+        for (let j = 0; j < featuresList.length; j++) {
+            const feature = featuresList[j];
+            if (symbol.features[feature.name]) {
+                weight += weightList[symbol.features[feature.name]];
+            }
+        }
+        symbol.weight = weight;
+        symbolsMatrix.sort((a, b) => a.weight - b.weight)
+    }
 
+    const sortedSymbols = symbolsMatrix.sort((a, b) => b.weight - a.weight);
 
+    return sortedSymbols;
+}
 
+function lexurgyOutput(input) {
+    const featuresList = getFeatureList(input);
+    const symbolsList = sortSymbols(input);
 
-    })
+    const featureNames = featuresList.map(f => f.name);
+    const asterisks = featuresList
+        .filter(f => f.asterisk)
+        .map(f => f.asterisk);
 
+    console.log(asterisks)
+
+    let output = "";
+
+    for (let i = 0; i < symbolsList.length; i++) {
+        const symbol = symbolsList[i];
+        const symbolFeatures = featureNames
+            .filter(f => symbol.features[f] && !asterisks.includes(symbol.features[f]))
+            .map(f => symbol.features[f]);
+        let line = `Symbol ${symbol.name} [${symbolFeatures.join(" ").trim().replace(/\s+/g, ' ')}] \n`
+
+        output += line;
+    }
+
+    return output;
 }
 
 //THE OUTPUT
@@ -134,9 +197,10 @@ function result(input) {
         return "I haven't figured out sorting diacritics yet. Please don't input them";
     }
 
-    console.log(getFeatureList(inputList));
-    console.log(getSymbolsList(inputList));
+    // console.log(getFeatureList(inputList));
+    // console.log(getSymbolsList(inputList));
+    console.log(sortSymbols(inputList));
 
-    return ":P";
+    return lexurgyOutput(inputList);
 
 }

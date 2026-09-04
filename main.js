@@ -1,10 +1,35 @@
-//RANDOM FUNCTIONS
-function sortByLength(array) {
-    return array.sort((x, y) => y.length - x.length);
+function filterDuplicateSymbols(arr) {
+  const map = new Map();
+  
+  arr.forEach(obj => {
+    const name = obj.name;
+    const keyCount = Object.keys(obj.features).length;
+    
+    if (!map.has(name) || keyCount > Object.keys(map.get(name).features).length) {
+      map.set(name, obj);
+    }
+  });
+  
+  return Array.from(map.values());
 }
-function transpose(matrix) {
-    let [row] = matrix
-    return row.map((value, column) => matrix.map(row => row[column]))
+
+function filterDuplicateFeatures(arr) {
+  const filtered = []
+  
+  arr.forEach(obj => {
+    const name = obj.name;
+    const keyCount = obj.types.length;
+    
+    if (!filtered.some(f => f.name === obj.name)) {
+      filtered.push(obj);
+    }
+    else {
+        filtered[filtered.findIndex(f => f.name === obj.name)].types = 
+            [... new Set([...filtered[filtered.findIndex(f => f.name === obj.name)].types, ...obj.types])];
+    }
+  });
+  
+  return filtered;
 }
 
 /* HOW TO SORT STUFF
@@ -24,7 +49,7 @@ function getFeatureList(input) {
     for (let i = 0; i < input.length; i++) {
         const line = input[i];
 
-        if (line.includes("Feature")) {
+        if (/Feature/.test(line) && !/(?<!\\)\+/.test(line)) { //doesn't add stuff like Feature +long
             const match = line.trim().match(/^Feature\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)$/);
             if (!match) {
                 throw new Error("Error at: '" + line + "'");
@@ -49,7 +74,7 @@ function getFeatureList(input) {
 
 
     //weigh them
-    const weightedFeatures = features;
+    const weightedFeatures = filterDuplicateFeatures(features);
     let largestFeatureLength = 10;
     console.log(largestFeatureLength);
     for (let i = 1; i < features.length; i++) {
@@ -118,7 +143,7 @@ function getSymbolsList(input) {
         symbolsMatrix.push(matrix);
     }
 
-    return symbolsMatrix;
+    return filterDuplicateSymbols(symbolsMatrix);
 }
 
 function sortSymbols(input) {
@@ -149,7 +174,6 @@ function sortSymbols(input) {
             }
         }
         symbol.weight = weight;
-        symbolsMatrix.sort((a, b) => a.weight - b.weight)
     }
 
     const sortedSymbols = symbolsMatrix.sort((a, b) => b.weight - a.weight);
@@ -161,22 +185,33 @@ function lexurgyOutput(input) {
     const featuresList = getFeatureList(input);
     const symbolsList = sortSymbols(input);
 
-    const featureNames = featuresList.map(f => f.name);
-    const asterisks = featuresList
+    const featureNames = featuresList.map(f => f.name); // array of feature names in order
+    const asterisks = featuresList // array of all asterisked features
         .filter(f => f.asterisk)
         .map(f => f.asterisk);
 
-    console.log(asterisks)
-
     let output = "";
 
+    // features definitions
+    for (let i = 0; i < featuresList.length; i++) {
+        const feature = featuresList[i];
+        const featureTypes = feature.types;
+        if(feature.asterisk) {
+            featureTypes[featureTypes.indexOf(feature.asterisk)] = "*" + feature.asterisk
+        }
+        let line = `Feature ${feature.name} (${featureTypes.join(", ").trim().replace(/\s+/g, ' ')}) \n`;
+        output += line;
+    }
+
+    output += "\n"
+
+    // symbols definitions
     for (let i = 0; i < symbolsList.length; i++) {
         const symbol = symbolsList[i];
         const symbolFeatures = featureNames
             .filter(f => symbol.features[f] && !asterisks.includes(symbol.features[f]))
             .map(f => symbol.features[f]);
         let line = `Symbol ${symbol.name} [${symbolFeatures.join(" ").trim().replace(/\s+/g, ' ')}] \n`
-
         output += line;
     }
 
@@ -187,15 +222,15 @@ function lexurgyOutput(input) {
 
 function result(input) {
     const inputList = input.split("\n");
-    if (input.includes(":") && !input.includes("\:")) {
-        return "Put in just the definitions, not the sound changes";
-    }
-    if (!(input.includes("Feature") || input.includes("Symbol"))) {
-        return "You're not defining anything";
-    }
-    if (input.includes("Diacritic") || input.includes("+")) {
-        return "I haven't figured out sorting diacritics yet. Please don't input them";
-    }
+    // if (input.includes(":") && !input.includes("\:")) {
+    //     return "Put in just the definitions, not the sound changes";
+    // }
+    // if (!(input.includes("Feature") || input.includes("Symbol"))) {
+    //     return "You're not defining anything";
+    // }
+    // if (input.includes("Diacritic") || input.includes("+")) {
+    //     return "I haven't figured out sorting diacritics yet. Please don't input them";
+    // }
 
     // console.log(getFeatureList(inputList));
     // console.log(getSymbolsList(inputList));

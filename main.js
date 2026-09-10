@@ -53,6 +53,7 @@ function getFeatureList(input) {
             const matchMulti = line.trim().match(/^Feature\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)$/);
             if (matchMulti) { //if it's multivalent
                 const [, name, typesString] = matchMulti;
+                name.trim();
                 const types = typesString
                     .split(',')
                     .map(s => s.trim())
@@ -61,41 +62,44 @@ function getFeatureList(input) {
                     astIndex = types.findIndex(item => item.includes("*"));
                     types[astIndex] = types[astIndex].slice(1);
                     const asterisk = types[astIndex];
-                    features.push({ name, types, asterisk, kind: "multivalent" });
+                    features.push({ name, types, asterisk, kind: "multivalent", line: i });
 
                 }
                 else {
-                    features.push({ name, types, kind: "multivalent" });
+                    features.push({ name, types, kind: "multivalent", line: i });
                 }
             }
             else { //if it isn't
                 const binaries = line.slice(7).split(",").map(f => f.trim());
                 binaries.forEach(feature => {
-                    if(feature.startsWith("+")) { // Feature +long
+                    if (feature.startsWith("+")) { // Feature +long
                         const name = feature.slice(1);
                         features.push({
-                            name, 
-                            types: ["-"+name,"+"+name],
-                            asterisks: "-"+name,
-                            kind: "univalent"
+                            name,
+                            types: ["-" + name, "+" + name],
+                            asterisks: "-" + name,
+                            kind: "univalent",
+                            line: i
                         });
                     }
-                    else if(!feature.startsWith("(syllable)")) { // Feature syllabic
+                    else if (!feature.startsWith("(syllable)")) { // Feature syllabic
                         const name = feature;
                         features.push({
-                            name, 
-                            types: ["*"+name,"+"+name,"-"+name],
-                            asterisks: "*"+name,
-                            kind: "bivalent"
+                            name,
+                            types: ["*" + name, "+" + name, "-" + name],
+                            asterisks: "*" + name,
+                            kind: "bivalent",
+                            line: i
                         });
                     }
                     else { // Feature (syllable) +stress
                         const name = feature.slice(10).trim();
                         features.push({
-                            name, 
+                            name: name.startsWith("+") ? name.slice(1) : name,
                             types: [name],
                             asterisks: "",
-                            kind: "syllable"
+                            kind: "syllable",
+                            line: i
                         });
                     }
                 });
@@ -115,11 +119,12 @@ function getFeatureList(input) {
     }
     for (let i = 0; i < weightedFeatures.length; i++) {
         const feature = weightedFeatures[i];
-        feature.weight = largestFeatureLength ** (weightedFeatures.length - i - 1);
+        // feature.weight = largestFeatureLength ** (weightedFeatures.length - i - 1);
+        feature.weight = i;
         feature.typeWeights = [];
         for (let j = 0; j < feature.types.length; j++) {
-            const type = feature.types[j];
-            feature.typeWeights[j] = (largestFeatureLength - j - 1) * feature.weight;
+            // feature.typeWeights[j] = (largestFeatureLength - j - 1) * feature.weight;
+            feature.typeWeights[j] = j + 1;
         }
     }
 
@@ -173,8 +178,30 @@ function getSymbolsList(input) {
         }
         symbolsMatrix.push(matrix);
     }
-
     return filterDuplicateSymbols(symbolsMatrix);
+}
+
+function getDiacritics(input) {
+    const featuresList = getFeatureList(input);
+    const diacritics = []
+    for (let i = 0; i < input.length; i++) {
+        const line = input[i];
+        if (line.startsWith("Diacritic")) {
+            const match = line.match(/^Diacritic(.+?)\s*(?:\(([^)]+)\))?\s*\[\+?([^\]]+)\]$/);
+            if (!match) {
+                throw new Error("Error at " + line);
+            }
+            const [, name, type, feature] = match;
+            const result = { name, feature };
+            if (type) result.type = type;
+            diacritics.push(result);
+        }
+    }
+    diacritics.sort((a, b) => {
+        function getIndex(x) { return featuresList.findIndex(f => f.name === x.name); }
+        return getIndex(a) - getIndex(b);
+    })
+    return diacritics;
 }
 
 function sortSymbols(input) {
@@ -187,7 +214,7 @@ function sortSymbols(input) {
     for (let i = 0; i < featuresList.length; i++) {
         const feature = featuresList[i];
         for (let j = 0; j < feature.types.length; j++) {
-            weightList[feature.types[j]] = feature.typeWeights[j]
+            weightList[feature.types[j]] = { index: feature.weight, id: feature.typeWeights[j] }
         }
     }
 
@@ -197,17 +224,27 @@ function sortSymbols(input) {
 
     for (let i = 0; i < symbolsMatrix.length; i++) {
         const symbol = symbolsMatrix[i];
-        let weight = 0;
+        let weight = [];
         for (let j = 0; j < featuresList.length; j++) {
             const feature = featuresList[j];
-            if (symbol.features[feature.name]) {
-                weight += weightList[symbol.features[feature.name]];
+            const featureType = symbol.features[feature.name]
+            if (featureType) {
+                weight[weightList[featureType].index] = weightList[featureType].id;
             }
         }
         symbol.weight = weight;
     }
 
-    const sortedSymbols = symbolsMatrix.sort((a, b) => b.weight - a.weight);
+    const sortedSymbols = symbolsMatrix.sort((a, b) => {
+        const len = Math.min(a.weight.length, b.weight.length);
+        for (let i = 0; i < len; i++) {
+            const aw = a.weight[i] ?? 0;
+            const bw = b.weight[i] ?? 0;
+            if (aw !== bw) return aw - bw;
+        }
+        return a.weight.length - b.weight.length;
+    });
+    console.log(sortedSymbols);
 
     return sortedSymbols;
 }
@@ -215,23 +252,50 @@ function sortSymbols(input) {
 function lexurgyOutput(input) {
     const featuresList = getFeatureList(input);
     const symbolsList = sortSymbols(input);
+    const diacriticsList = getDiacritics(input)
 
     const featureNames = featuresList.map(f => f.name); // array of feature names in order
+    const multivalents = featuresList.filter(f => f.kind === "multivalent");
     const asterisks = featuresList // array of all asterisked features
         .filter(f => f.asterisk)
         .map(f => f.asterisk);
 
     let output = "";
 
+    console.log(featuresList);
+
+
     // features definitions
     for (let i = 0; i < featuresList.length; i++) {
         const feature = featuresList[i];
         const featureTypes = feature.types;
-        if (feature.asterisk) {
-            featureTypes[featureTypes.indexOf(feature.asterisk)] = "*" + feature.asterisk
+        if (feature.kind === "multivalent") {
+            if (feature.asterisk) {
+                featureTypes[featureTypes.indexOf(feature.asterisk)] = "*" + feature.asterisk
+            }
+            output += `Feature ${feature.name} (${featureTypes.join(", ").trim().replace(/\s+/g, ' ')}) \n`;
+
         }
-        let line = `Feature ${feature.name} (${featureTypes.join(", ").trim().replace(/\s+/g, ' ')}) \n`;
-        output += line;
+        else {
+            if (featuresList[i - 1] && feature.line !== featuresList[i - 1].line) {
+                output += "Feature "
+            }
+            if (feature.kind == "syllable") {
+                output += `(syllable) ${feature.name}`;
+            }
+            if (feature.kind == "bivalent") {
+                output += `${feature.name}`;
+            }
+            if (feature.kind == "univalent") {
+                output += `+${feature.name}`;
+            }
+            if (featuresList[i + 1] && feature.line == featuresList[i + 1].line) {
+                output += ", "
+            }
+            else {
+                output += "\n"
+            }
+        }
     }
 
     output += "\n"
@@ -244,6 +308,18 @@ function lexurgyOutput(input) {
             .map(f => symbol.features[f]);
         let line = `Symbol ${symbol.name} [${symbolFeatures.join(" ").trim().replace(/\s+/g, ' ')}] \n`
         output += line;
+    }
+
+    output += "\n"
+
+    // diacritics
+
+    for (let i = 0; i < diacriticsList.length; i++) {
+        const diacritic = diacriticsList[i];
+        console.log(diacritic);
+        const par = diacritic.type ? `(${diacritic.type}) ` : "";
+        const fea = featuresList[diacritic.feature].kind == "univalent" ? "+" + diacritic.feature : diacritic.feature;
+        output += `Diacritic ${diacritic.name} ${par}${fea} \n`
     }
 
     return output;

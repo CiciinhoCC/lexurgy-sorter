@@ -1,35 +1,35 @@
 function filterDuplicateSymbols(arr) {
-  const map = new Map();
-  
-  arr.forEach(obj => {
-    const name = obj.name;
-    const keyCount = Object.keys(obj.features).length;
-    
-    if (!map.has(name) || keyCount > Object.keys(map.get(name).features).length) {
-      map.set(name, obj);
-    }
-  });
-  
-  return Array.from(map.values());
+    const map = new Map();
+
+    arr.forEach(obj => {
+        const name = obj.name;
+        const keyCount = Object.keys(obj.features).length;
+
+        if (!map.has(name) || keyCount > Object.keys(map.get(name).features).length) {
+            map.set(name, obj);
+        }
+    });
+
+    return Array.from(map.values());
 }
 
 function filterDuplicateFeatures(arr) {
-  const filtered = []
-  
-  arr.forEach(obj => {
-    const name = obj.name;
-    const keyCount = obj.types.length;
-    
-    if (!filtered.some(f => f.name === obj.name)) {
-      filtered.push(obj);
-    }
-    else {
-        filtered[filtered.findIndex(f => f.name === obj.name)].types = 
-            [... new Set([...filtered[filtered.findIndex(f => f.name === obj.name)].types, ...obj.types])];
-    }
-  });
-  
-  return filtered;
+    const filtered = []
+
+    arr.forEach(obj => {
+        const name = obj.name;
+        const keyCount = obj.types.length;
+
+        if (!filtered.some(f => f.name === obj.name)) {
+            filtered.push(obj);
+        }
+        else {
+            filtered[filtered.findIndex(f => f.name === obj.name)].types =
+                [... new Set([...filtered[filtered.findIndex(f => f.name === obj.name)].types, ...obj.types])];
+        }
+    });
+
+    return filtered;
 }
 
 /* HOW TO SORT STUFF
@@ -49,25 +49,56 @@ function getFeatureList(input) {
     for (let i = 0; i < input.length; i++) {
         const line = input[i];
 
-        if (/Feature/.test(line) && !/(?<!\\)\+/.test(line)) { //doesn't add stuff like Feature +long
-            const match = line.trim().match(/^Feature\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)$/);
-            if (!match) {
-                throw new Error("Error at: '" + line + "'");
-            }
-            const [, name, typesString] = match;
-            const types = typesString
-                .split(',')
-                .map(s => s.trim())
-                .filter(s => s.length > 0);
-            if (types.some(item => item.startsWith("*"))) { //if there's smth like *cons
-                astIndex = types.findIndex(item => item.includes("*"));
-                types[astIndex] = types[astIndex].slice(1);
-                const asterisk = types[astIndex];
-                features.push({ name, types, asterisk });
+        if (/Feature/.test(line) && !line.startsWith("#")) {
+            const matchMulti = line.trim().match(/^Feature\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)$/);
+            if (matchMulti) { //if it's multivalent
+                const [, name, typesString] = matchMulti;
+                const types = typesString
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(s => s.length > 0);
+                if (types.some(item => item.startsWith("*"))) { //if there's smth like *cons
+                    astIndex = types.findIndex(item => item.includes("*"));
+                    types[astIndex] = types[astIndex].slice(1);
+                    const asterisk = types[astIndex];
+                    features.push({ name, types, asterisk, kind: "multivalent" });
 
+                }
+                else {
+                    features.push({ name, types, kind: "multivalent" });
+                }
             }
-            else {
-                features.push({ name, types });
+            else { //if it isn't
+                const binaries = line.slice(7).split(",").map(f => f.trim());
+                binaries.forEach(feature => {
+                    if(feature.startsWith("+")) { // Feature +long
+                        const name = feature.slice(1);
+                        features.push({
+                            name, 
+                            types: ["-"+name,"+"+name],
+                            asterisks: "-"+name,
+                            kind: "univalent"
+                        });
+                    }
+                    else if(!feature.startsWith("(syllable)")) { // Feature syllabic
+                        const name = feature;
+                        features.push({
+                            name, 
+                            types: ["*"+name,"+"+name,"-"+name],
+                            asterisks: "*"+name,
+                            kind: "bivalent"
+                        });
+                    }
+                    else { // Feature (syllable) +stress
+                        const name = feature.slice(10).trim();
+                        features.push({
+                            name, 
+                            types: [name],
+                            asterisks: "",
+                            kind: "syllable"
+                        });
+                    }
+                });
             }
         }
     }
@@ -75,9 +106,9 @@ function getFeatureList(input) {
 
     //weigh them
     const weightedFeatures = filterDuplicateFeatures(features);
-    let largestFeatureLength = 10;
+    let largestFeatureLength = 2;
     console.log(largestFeatureLength);
-    for (let i = 1; i < features.length; i++) {
+    for (let i = 1; i < features.length; i++) { //get largest feature
         if (features[i].types.length > largestFeatureLength) {
             largestFeatureLength = features[i].types.length;
         }
@@ -96,12 +127,12 @@ function getFeatureList(input) {
 }
 
 function getSymbolsList(input) {
-    const featuresList = getFeatureList(input);
+    const featuresList = getFeatureList(input).filter(f => f.kind !== "syllable");
     let symbols = [];
-    for (let i = 0; i < input.length; i++) {
+    for (let i = 0; i < input.length; i++) { //get all symbols
         const line = input[i];
 
-        if (line.includes("Symbol")) {
+        if (line.includes("Symbol") && !line.startsWith("#")) {
             const match = line.match(/^Symbol\s+([^\s]+)\s+\[([^\]]*)\]$/);
             if (!match) {
                 throw new Error("Error at: '" + line + "'");
@@ -114,7 +145,7 @@ function getSymbolsList(input) {
             symbols.push({ name, features });
         };
     }
-
+    //assign features to them
     let symbolsMatrix = [];
 
     for (let i = 0; i < symbols.length; i++) {
@@ -196,7 +227,7 @@ function lexurgyOutput(input) {
     for (let i = 0; i < featuresList.length; i++) {
         const feature = featuresList[i];
         const featureTypes = feature.types;
-        if(feature.asterisk) {
+        if (feature.asterisk) {
             featureTypes[featureTypes.indexOf(feature.asterisk)] = "*" + feature.asterisk
         }
         let line = `Feature ${feature.name} (${featureTypes.join(", ").trim().replace(/\s+/g, ' ')}) \n`;
@@ -234,7 +265,7 @@ function result(input) {
 
     // console.log(getFeatureList(inputList));
     // console.log(getSymbolsList(inputList));
-    console.log(sortSymbols(inputList));
+    console.log(getFeatureList(inputList));
 
     return lexurgyOutput(inputList);
 

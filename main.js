@@ -142,7 +142,7 @@ function getSymbolsList(input) {
         const line = input[i];
 
         if (line.includes("Symbol") && !line.startsWith("#")) {
-            const match = line.match(/^Symbol\s+([^\s]+)\s+\[([^\]]*)\]$/);
+            const match = line.trim().match(/^Symbol\s+([^\s]+)\s+\[([^\]]*)\]$/);
             if (!match) {
                 throw new Error("Error at: '" + line + "'");
             }

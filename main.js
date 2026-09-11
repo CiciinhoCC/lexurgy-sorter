@@ -32,6 +32,21 @@ function filterDuplicateFeatures(arr) {
     return filtered;
 }
 
+function filterDuplicateDiacritics(arr) {
+    const filtered = []
+
+    arr.forEach(obj => {
+        const name = obj.name;
+        const feature = obj.feature;
+
+        if(!filtered.some(d => d.name === name || d.feature === feature )){
+            filtered.push(obj);
+        }
+    });
+
+    return filtered;
+}
+
 /* HOW TO SORT STUFF
 - get the definitions and sort them in a hierarchy
 - make a list of all the symbols and turn them into lil objects
@@ -50,8 +65,9 @@ function getFeatureList(input) {
         const line = input[i];
 
         if (/Feature/.test(line) && !line.startsWith("#")) {
-            const matchMulti = line.trim().match(/^Feature\s+([a-zA-Z0-9_]+)\s*\(([^)]*)\)$/);
+            const matchMulti = line.trim().match(/^Feature\s+(?:\(syllable\)\s+)?([a-zA-Z0-9_]+)\s*\(([^)]*)\)$/);
             if (matchMulti) { //if it's multivalent
+                const syllable = line.includes("(syllable)");
                 const [, name, typesString] = matchMulti;
                 name.trim();
                 const types = typesString
@@ -62,44 +78,40 @@ function getFeatureList(input) {
                     astIndex = types.findIndex(item => item.includes("*"));
                     types[astIndex] = types[astIndex].slice(1);
                     const asterisk = types[astIndex];
-                    features.push({ name, types, asterisk, kind: "multivalent", line: i });
+                    features.push({ name, types, asterisk, kind: "multivalent", line: i, syllable });
 
                 }
                 else {
-                    features.push({ name, types, kind: "multivalent", line: i });
+                    features.push({ name, types, kind: "multivalent", line: i, syllable });
                 }
             }
             else { //if it isn't
                 const binaries = line.slice(7).split(",").map(f => f.trim());
                 binaries.forEach(feature => {
-                    if (feature.startsWith("+")) { // Feature +long
-                        const name = feature.slice(1);
+                    const syllable = feature.includes("(syllable)");
+                    let name = feature;
+                    if (syllable) {
+                        name = name.slice(10).trim();
+                    }
+                    if (name.startsWith("+")) { // Feature +long
+                        name = name.slice(1);
                         features.push({
                             name,
                             types: ["-" + name, "+" + name],
                             asterisks: "-" + name,
                             kind: "univalent",
-                            line: i
+                            line: i,
+                            syllable
                         });
                     }
-                    else if (!feature.startsWith("(syllable)")) { // Feature syllabic
-                        const name = feature;
+                    else { // Feature syllabic
                         features.push({
                             name,
                             types: ["*" + name, "+" + name, "-" + name],
                             asterisks: "*" + name,
                             kind: "bivalent",
-                            line: i
-                        });
-                    }
-                    else { // Feature (syllable) +stress
-                        const name = feature.slice(10).trim();
-                        features.push({
-                            name: name.startsWith("+") ? name.slice(1) : name,
-                            types: [name],
-                            asterisks: "",
-                            kind: "syllable",
-                            line: i
+                            line: i,
+                            syllable
                         });
                     }
                 });
@@ -111,7 +123,6 @@ function getFeatureList(input) {
     //weigh them
     const weightedFeatures = filterDuplicateFeatures(features);
     let largestFeatureLength = 2;
-    console.log(largestFeatureLength);
     for (let i = 1; i < features.length; i++) { //get largest feature
         if (features[i].types.length > largestFeatureLength) {
             largestFeatureLength = features[i].types.length;
@@ -187,21 +198,37 @@ function getDiacritics(input) {
     for (let i = 0; i < input.length; i++) {
         const line = input[i];
         if (line.startsWith("Diacritic")) {
-            const match = line.match(/^Diacritic(.+?)\s*(?:\(([^)]+)\))?\s*\[\+?([^\]]+)\]$/);
-            if (!match) {
-                throw new Error("Error at " + line);
-            }
-            const [, name, type, feature] = match;
-            const result = { name, feature };
-            if (type) result.type = type;
-            diacritics.push(result);
+
+            const match = line.trim().match(/^Diacritic\s+(.+?)\s*((?:\([^)]+\)\s*)*)\[([^\]]+)\]$/);
+
+            if (!match) throw new Error("Error at " + line);
+
+            const name = match[1].trim();
+            const typesPart = match[2];
+            const feature = match[3].trim();
+
+            // Extract all types from the parenthesized groups
+            const type = [...typesPart.matchAll(/\(([^)]+)\)/g)].map(m => m[1].trim());
+
+            diacritics.push({ name, type, feature });
         }
     }
-    diacritics.sort((a, b) => {
-        function getIndex(x) { return featuresList.findIndex(f => f.name === x.name); }
-        return getIndex(a) - getIndex(b);
-    })
-    return diacritics;
+    return filterDuplicateDiacritics(diacritics).sort((a, b) => {
+        function getIndex(x) { 
+            return featuresList.findIndex(f => f.types.includes(x.feature)); 
+        }
+        function getTypeIndex(x) {
+            return featuresList[getIndex(x)].types.findIndex((t => x.feature == t)); 
+        }
+        let result = 0;
+        if(getIndex(a) != getIndex(b)){
+            result = getIndex(a) - getIndex(b);
+        }
+        else {
+            result = getTypeIndex(a) - getTypeIndex(b);
+        };
+        return result;
+    });
 }
 
 function sortSymbols(input) {
@@ -217,8 +244,6 @@ function sortSymbols(input) {
             weightList[feature.types[j]] = { index: feature.weight, id: feature.typeWeights[j] }
         }
     }
-
-    console.log(weightList)
 
     // weigh all the symbols
 
@@ -244,7 +269,6 @@ function sortSymbols(input) {
         }
         return a.weight.length - b.weight.length;
     });
-    console.log(sortedSymbols);
 
     return sortedSymbols;
 }
@@ -262,8 +286,6 @@ function lexurgyOutput(input) {
 
     let output = "";
 
-    console.log(featuresList);
-
 
     // features definitions
     for (let i = 0; i < featuresList.length; i++) {
@@ -273,18 +295,18 @@ function lexurgyOutput(input) {
             if (feature.asterisk) {
                 featureTypes[featureTypes.indexOf(feature.asterisk)] = "*" + feature.asterisk
             }
-            output += `Feature ${feature.name} (${featureTypes.join(", ").trim().replace(/\s+/g, ' ')}) \n`;
+            output += `Feature ${feature.syllable ? "(syllable) " : ""}${feature.name} (${featureTypes.join(", ").trim().replace(/\s+/g, ' ')}) \n`;
 
         }
         else {
-            if (featuresList[i - 1] && feature.line !== featuresList[i - 1].line) {
-                output += "Feature "
+            if (featuresList[i - 1] && feature.line !== featuresList[i - 1].line || i==0) {
+                output += "Feature ";
             }
-            if (feature.kind == "syllable") {
-                output += `(syllable) ${feature.name}`;
+            if (feature.syllable) {
+                output += "(syllable) ";
             }
             if (feature.kind == "bivalent") {
-                output += `${feature.name}`;
+                output += feature.name;
             }
             if (feature.kind == "univalent") {
                 output += `+${feature.name}`;
@@ -316,10 +338,16 @@ function lexurgyOutput(input) {
 
     for (let i = 0; i < diacriticsList.length; i++) {
         const diacritic = diacriticsList[i];
-        console.log(diacritic);
-        const par = diacritic.type ? `(${diacritic.type}) ` : "";
-        const fea = featuresList[diacritic.feature].kind == "univalent" ? "+" + diacritic.feature : diacritic.feature;
-        output += `Diacritic ${diacritic.name} ${par}${fea} \n`
+        let par = " ";
+        if(diacritic.type != []) {
+            for (let i = 0; i < diacritic.type.length; i++) {
+                const type = diacritic.type[i];
+                par += `(${type}) `
+            }
+        }
+        // const fea = featuresList[featuresList.findIndex(f => f.name === diacritic.feature)].kind == "univalent" ? "+" + diacritic.feature : diacritic.feature;
+        const fea = diacritic.feature;
+        output += `Diacritic ${diacritic.name} ${par}[${fea}]\n`
     }
 
     return output;
@@ -338,10 +366,6 @@ function result(input) {
     // if (input.includes("Diacritic") || input.includes("+")) {
     //     return "I haven't figured out sorting diacritics yet. Please don't input them";
     // }
-
-    // console.log(getFeatureList(inputList));
-    // console.log(getSymbolsList(inputList));
-    console.log(getFeatureList(inputList));
 
     return lexurgyOutput(inputList);
 

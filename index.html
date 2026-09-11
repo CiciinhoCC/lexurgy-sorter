@@ -13,114 +13,134 @@
         <div>
             <h1>Input</h1>
             <textarea name="input" id="input" placeholder="Lexurgy goes here" wrap="off">
-Feature type (*cons, vow, tab, punctuation)
-Feature manner (nasal, stop, fric, affric, approx, trill)
-Feature poa (labial, alveolar, postalv, palatal, velar, uvular, glottal, dental, retro, labpal)
-Feature voice (*voiceless, voiced)
-Feature lat (*notlat, lat)
-Feature height (high, midhigh, mid, midlow, low)
-Feature frontness (front, center, back)
-Feature roundedness (*unround, rounded)
+Feature +long, +extralong
+Feature +nasal, +creaky, +breath
+Feature (syllable) +stress
+Feature +high, +low, +rise, +fall
+Feature +pal, +lab, +asp, +prenas, +syl, +nonsyl
+Feature type (*cons, vow, tab, punctuation) 
+Feature manner (nasal, stop, fric, affric, approx, trill) 
+Feature poa (labial, alveolar, postalv, palatal, velar, uvular, glottal, dental, retro, labpal, retroflex) 
+Feature voice (*voiceless, voiced) 
+Feature lat (*notlat, lat) 
+Feature height (high, midhigh, mid, midlow, low) 
+Feature frontness (front, center, back) 
+Feature roundedness (*unround, rounded) 
 
-Symbol m̥ [labial nasal]
-Symbol m [labial nasal voiced]
-Symbol p [labial stop]
-Symbol b [labial stop voiced]
-Symbol f [labial fric]
-Symbol v [labial fric voiced]
-Symbol p͡f [labial affric]
-Symbol ʍ [labial approx]
-Symbol w [labial approx voiced]
-Symbol n̥ [alveolar nasal]
-Symbol n [alveolar nasal voiced]
-Symbol t [alveolar stop]
-Symbol d [alveolar stop voiced]
-Symbol s [alveolar fric]
-Symbol ɬ [alveolar fric lat]
-Symbol z [alveolar fric voiced]
-Symbol ɮ [alveolar fric voiced lat]
-Symbol t͡s [alveolar affric]
-Symbol t͡ɬ [alveolar affric lat]
-Symbol d͡z [alveolar affric voiced]
-Symbol d͡ɮ [alveolar affric voiced lat]
-Symbol l̥ [alveolar approx lat]
-Symbol l [alveolar approx voiced lat]
-Symbol r̥ [alveolar trill]
-Symbol r [alveolar trill voiced]
-Symbol ʃ [postalv fric]
-Symbol ʒ [postalv fric voiced]
-Symbol t͡ʃ [postalv affric]
-Symbol d͡ʒ [postalv affric voiced]
-Symbol ɲ̥ [palatal nasal]
-Symbol ɲ [palatal nasal voiced]
-Symbol c [palatal stop]
-Symbol ɟ [palatal stop voiced]
-Symbol ç [palatal fric]
-Symbol ʝ [palatal fric voiced]
-Symbol c͡ç [palatal affric]
-Symbol j̥ [palatal approx]
-Symbol ʎ̥ [palatal approx lat]
-Symbol j [palatal approx voiced]
-Symbol ʎ [palatal approx voiced lat]
-Symbol ŋ̥ [velar nasal]
-Symbol ŋ [velar nasal voiced]
-Symbol k [velar stop]
-Symbol g [velar stop voiced]
-Symbol x [velar fric]
-Symbol ɣ [velar fric voiced]
-Symbol k͡x [velar affric]
-Symbol ɰ̥ [velar approx]
-Symbol ɰ [velar approx voiced]
-Symbol ʟ [velar approx voiced lat]
-Symbol q [uvular stop]
-Symbol ɢ [uvular stop voiced]
-Symbol χ [uvular fric]
-Symbol ʁ [uvular fric voiced]
-Symbol q͡χ [uvular affric]
-Symbol ʀ̥ [uvular trill]
-Symbol ʀ [uvular trill voiced]
-Symbol ʔ [glottal stop]
-Symbol h [glottal fric]
-Symbol ɦ [glottal fric voiced]
-Symbol þ [dental fric]
-Symbol ð [dental fric voiced]
-Symbol ɳ̥ [retro nasal]
-Symbol ɳ [retro nasal voiced]
-Symbol ʈ [retro stop]
-Symbol ɖ [retro stop voiced]
-Symbol ʂ [retro fric]
-Symbol ʐ [retro fric voiced]
-Symbol ɻ̥ [retro approx]
-Symbol ɭ̥ [retro approx lat]
-Symbol ɻ [retro approx voiced]
-Symbol ɭ [retro approx voiced lat]
-Symbol ɥ̥ [labpal approx]
-Symbol ɥ [labpal approx voiced]
+Symbol m̥ [nasal labial] 
+Symbol m [nasal labial voiced] 
+Symbol n̥ [nasal alveolar] 
+Symbol n [nasal alveolar voiced] 
+Symbol ɲ̥ [nasal palatal] 
+Symbol ɲ [nasal palatal voiced] 
+Symbol ŋ̥ [nasal velar] 
+Symbol ŋ [nasal velar voiced] 
+Symbol ɳ̥ [nasal retro] 
+Symbol ɳ [nasal retro voiced] 
+Symbol p [stop labial] 
+Symbol b [stop labial voiced] 
+Symbol t [stop alveolar] 
+Symbol d [stop alveolar voiced] 
+Symbol c [stop palatal] 
+Symbol ɟ [stop palatal voiced] 
+Symbol k [stop velar] 
+Symbol g [stop velar voiced] 
+Symbol q [stop uvular] 
+Symbol ɢ [stop uvular voiced] 
+Symbol ʔ [stop glottal] 
+Symbol ʈ [stop retro] 
+Symbol ɖ [stop retro voiced] 
+Symbol f [fric labial] 
+Symbol v [fric labial voiced] 
+Symbol s [fric alveolar] 
+Symbol ɬ [fric alveolar lat] 
+Symbol z [fric alveolar voiced] 
+Symbol ɮ [fric alveolar voiced lat] 
+Symbol ʃ [fric postalv] 
+Symbol ʒ [fric postalv voiced] 
+Symbol ç [fric palatal] 
+Symbol ʝ [fric palatal voiced] 
+Symbol x [fric velar] 
+Symbol ɣ [fric velar voiced] 
+Symbol χ [fric uvular] 
+Symbol ʁ [fric uvular voiced] 
+Symbol h [fric glottal] 
+Symbol ɦ [fric glottal voiced] 
+Symbol þ [fric dental] 
+Symbol ð [fric dental voiced] 
+Symbol ʂ [fric retro] 
+Symbol ʐ [fric retro voiced] 
+Symbol p͡f [affric labial] 
+Symbol t͡s [affric alveolar] 
+Symbol t͡ɬ [affric alveolar lat] 
+Symbol d͡z [affric alveolar voiced] 
+Symbol d͡ɮ [affric alveolar voiced lat] 
+Symbol t͡ʃ [affric postalv] 
+Symbol d͡ʒ [affric postalv voiced] 
+Symbol c͡ç [affric palatal] 
+Symbol k͡x [affric velar] 
+Symbol q͡χ [affric uvular] 
+Symbol ʍ [approx labial] 
+Symbol w [approx labial voiced] 
+Symbol l̥ [approx alveolar lat] 
+Symbol l [approx alveolar voiced lat] 
+Symbol j̥ [approx palatal] 
+Symbol ʎ̥ [approx palatal lat] 
+Symbol j [approx palatal voiced] 
+Symbol ʎ [approx palatal voiced lat] 
+Symbol ɰ̥ [approx velar] 
+Symbol ɰ [approx velar voiced] 
+Symbol ʟ [approx velar voiced lat] 
+Symbol ɻ̥ [approx retro] 
+Symbol ɭ̥ [approx retro lat] 
+Symbol ɻ [approx retro voiced] 
+Symbol ɭ [approx retro voiced lat] 
+Symbol ɥ̥ [approx labpal] 
+Symbol ɥ [approx labpal voiced] 
+Symbol r̥ [trill alveolar] 
+Symbol r [trill alveolar voiced] 
+Symbol ʀ̥ [trill uvular] 
+Symbol ʀ [trill uvular voiced] 
+Symbol i [vow high front] 
+Symbol y [vow high front rounded] 
+Symbol ɨ [vow high center] 
+Symbol ʉ [vow high center rounded] 
+Symbol ɯ [vow high back] 
+Symbol u [vow high back rounded] 
+Symbol ɪ [vow midhigh front] 
+Symbol ʏ [vow midhigh front rounded] 
+Symbol ʊ [vow midhigh back rounded] 
+Symbol e [vow mid front] 
+Symbol ø [vow mid front rounded] 
+Symbol ə [vow mid center] 
+Symbol ɵ [vow mid center rounded] 
+Symbol ɤ [vow mid back] 
+Symbol o [vow mid back rounded] 
+Symbol ɛ [vow midlow front] 
+Symbol œ [vow midlow front rounded] 
+Symbol ɐ [vow midlow center] 
+Symbol ɔ [vow midlow back rounded] 
+Symbol æ [vow low front] 
+Symbol a [vow low center] 
+Symbol ɑ [vow low back] 
+Symbol \- [punctuation] 
 
-Symbol i [vow high front]
-Symbol y [vow high front rounded]
-Symbol ɨ [vow high center]
-Symbol ʉ [vow high center rounded]
-Symbol ɯ [vow high back]
-Symbol u [vow high back rounded]
-Symbol ɪ [vow midhigh front]
-Symbol ʏ [vow midhigh front rounded]
-Symbol ʊ [vow midhigh back rounded]
-Symbol e [vow mid front]
-Symbol ø [vow mid front rounded]
-Symbol ə [vow mid center]
-Symbol ɵ [vow mid center rounded]
-Symbol ɤ [vow mid back]
-Symbol o [vow mid back rounded]
-Symbol ɛ [vow midlow front]
-Symbol œ [vow midlow front rounded]
-Symbol ɐ [vow midlow center]
-Symbol ɔ [vow midlow back rounded]
-Symbol æ [vow low front]
-Symbol a [vow low center]
-Symbol ɑ [vow low back]
-
-Symbol \- [punctuation]
+Diacritic ː  (floating) [+long]
+Diacritic ːː  (floating) [+extralong]
+Diacritic ̃  (floating) [+nasal]
+Diacritic ̰  (floating) [+creaky]
+Diacritic ̤  (floating) [+breath]
+Diacritic ˈ  (before) [+stress]
+Diacritic ́  (floating) [+high]
+Diacritic ̀  (floating) [+low]
+Diacritic ̌  (floating) [+rise]
+Diacritic ̂  (floating) [+fall]
+Diacritic ʲ  [+pal]
+Diacritic ʷ  [+lab]
+Diacritic ʰ  [+asp]
+Diacritic ⁿ  (before) [+prenas]
+Diacritic ̩  (floating) [+syl]
+Diacritic ̯  (floating) [+nonsyl]
             </textarea>
         </div>
         <div>
@@ -140,7 +160,7 @@ Symbol \- [punctuation]
             <p>It'll sort it by order of feature definitions. So it'll prioritize "type" over "manner" over "poa" in
                 this example.</p>
             <h2>Limitations</h2>
-            <p>I couldn't bother making it sort diacritics so it doesn't do that. </p>
+            <p>It can sort diacritics too but I'm not sure if it does it proper.</p>
             <p>I <i>think</i> it's fine to just paste all your lexurgy code in this, but if it isn't working then paste
                 only the actual definitions. </p>
             <p>It organizes the symbol matrix in the same order as how it's all defined, so instead of [voiced alveolar
@@ -151,9 +171,18 @@ Symbol \- [punctuation]
 
     <script src="main.js"></script>
     <script>
+        let input = "";
+        let output = "";
+        // let features, symbols, diacritics;
+        // document.getElementById("input").addEventListener("input", elem => {
+        //     input = document.getElementById("input").value;
+        //     features = getFeatureList(input.split("\n"));
+        //     symbols = sortSymbols(input.split("\n"));
+        //     diacritics = getDiacritics(input.split("\n"));
+            
+        // })
         function doTheThing() {
-            let input = document.getElementById("input").value;
-            let output = "";
+            input = document.getElementById("input").value;
             output = result(input);
             document.getElementById("output").innerHTML = output;
         }

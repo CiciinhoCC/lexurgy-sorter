@@ -1,3 +1,4 @@
+// blame floppa for everything
 function filterDuplicateSymbols(arr) {
     const map = new Map();
 
@@ -39,21 +40,13 @@ function filterDuplicateDiacritics(arr) {
         const name = obj.name;
         const feature = obj.feature;
 
-        if(!filtered.some(d => d.name === name || d.feature === feature )){
+        if (!filtered.some(d => d.name === name || d.feature === feature)) {
             filtered.push(obj);
         }
     });
 
     return filtered;
 }
-
-/* HOW TO SORT STUFF
-- get the definitions and sort them in a hierarchy
-- make a list of all the symbols and turn them into lil objects
-- sort them by those hierarchies
-- redo all of the lexurgy
-
-*/
 
 //SEPARATING SECTIONS
 
@@ -199,7 +192,7 @@ function getDiacritics(input) {
         const line = input[i];
         if (line.startsWith("Diacritic")) {
 
-            const match = line.trim().match(/^Diacritic\s+(.+?)\s*((?:\([^)]+\)\s*)*)\[([^\]]+)\]$/);
+            const match = line.trim().match(/^Diacritic\s+(.+?)\s*((?:\([^)]+\)\s*)*)\[([^\]]+)\]$/); // Diacritic ´ (floating) [+high]
 
             if (!match) throw new Error("Error at " + line);
 
@@ -207,21 +200,20 @@ function getDiacritics(input) {
             const typesPart = match[2];
             const feature = match[3].trim();
 
-            // Extract all types from the parenthesized groups
-            const type = [...typesPart.matchAll(/\(([^)]+)\)/g)].map(m => m[1].trim());
+            const type = [...typesPart.matchAll(/\(([^)]+)\)/g)].map(m => m[1].trim()); // for stuff like (floating) (before)
 
             diacritics.push({ name, type, feature });
         }
     }
     return filterDuplicateDiacritics(diacritics).sort((a, b) => {
-        function getIndex(x) { 
-            return featuresList.findIndex(f => f.types.includes(x.feature)); 
+        function getIndex(x) { // get which feature it is referencing
+            return featuresList.findIndex(f => f.types.includes(x.feature));
         }
-        function getTypeIndex(x) {
-            return featuresList[getIndex(x)].types.findIndex((t => x.feature == t)); 
+        function getTypeIndex(x) { // get which type
+            return featuresList[getIndex(x)].types.findIndex((t => x.feature == t));
         }
         let result = 0;
-        if(getIndex(a) != getIndex(b)){
+        if (getIndex(a) != getIndex(b)) {
             result = getIndex(a) - getIndex(b);
         }
         else {
@@ -299,7 +291,7 @@ function lexurgyOutput(input) {
 
         }
         else {
-            if (featuresList[i - 1] && feature.line !== featuresList[i - 1].line || i==0) {
+            if (featuresList[i - 1] && feature.line !== featuresList[i - 1].line || i == 0) {
                 output += "Feature ";
             }
             if (feature.syllable) {
@@ -339,7 +331,7 @@ function lexurgyOutput(input) {
     for (let i = 0; i < diacriticsList.length; i++) {
         const diacritic = diacriticsList[i];
         let par = " ";
-        if(diacritic.type != []) {
+        if (diacritic.type != []) {
             for (let i = 0; i < diacritic.type.length; i++) {
                 const type = diacritic.type[i];
                 par += `(${type}) `
@@ -357,16 +349,5 @@ function lexurgyOutput(input) {
 
 function result(input) {
     const inputList = input.split("\n");
-    // if (input.includes(":") && !input.includes("\:")) {
-    //     return "Put in just the definitions, not the sound changes";
-    // }
-    // if (!(input.includes("Feature") || input.includes("Symbol"))) {
-    //     return "You're not defining anything";
-    // }
-    // if (input.includes("Diacritic") || input.includes("+")) {
-    //     return "I haven't figured out sorting diacritics yet. Please don't input them";
-    // }
-
     return lexurgyOutput(inputList);
-
 }
